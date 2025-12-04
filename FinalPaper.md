@@ -34,10 +34,6 @@ The next big problem in the dataset were the vehicle model names. Again, anyone 
 
 Next, although I set a price cap of $1,000,000, people still listed their vehicles with unrealistic prices or odometer readings. To counteract this, I came up with a scoring system that gives each vehicle a score based on how suspicious the listing looks. If the score exceeded 4.5, it was removed from the dataset. I came up with a series of conditional statements to score cars. For example, if an economy car was priced over $90,000 that added a score of 2. To detect extreme outliers, I computed a robust Z-score for each listing using the median and MAD: `robust_z = |price − median_price| / MAD`. Listings more than 5x the typical variation added 2 points to the suspicious-listing score, 8x added 3 points, and 20x added 5 points.
 
-I calculated how far the listing price was from the typical listing price: 
-
-`robust_z = |price - median/MAD`, and if it was 5 times beyond the normal variation, I added 2 points. If it was 8 times, I added 3 points. These checks helped me remove a lot of erroneous data from the dataset.
-
 After my data cleaning, I was left with **209,000 row** of useable data. The graph below shows the price of vehicles vs their model year. The datapoints in red indicate that my scoring system deemed them suspicious and removed them. Many of the red datapoints are clear outliers.
 
 ![DataCleaning.png](figures/DataCleaning.png)
