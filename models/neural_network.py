@@ -26,6 +26,21 @@ class NeuralNetworkClassifier(BaseClassifier):
             verbose=True 
         )
         self.label_encoder = LabelEncoder()
+
+        self.feature_cols = [
+            # Categoricals (Low Cardinality)
+            'manufacturer', 'region', 'type', 'drive', 'fuel', 'transmission', 
+            'brand_category', 'state', 'model_simple',
+            
+            # Numeric
+            'year', 'age', 'odometer', 'miles_per_year',
+            'condition_numeric', 'cylinders_numeric',
+            
+            # Binary Flags (High Signal for Similarity)
+            'is_new', 'is_classic', 
+            'is_truck', 'is_suv', 'is_luxury', 'is_economy', 'is_exotic',
+            'is_electric', 'is_diesel', 'is_4wd'
+        ]
     
     def setup(self, X, y):
         y_encoded = self.label_encoder.fit_transform(y.values if hasattr(y, 'values') else y)

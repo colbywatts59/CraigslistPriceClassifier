@@ -4,6 +4,8 @@ from models.gradient_boosting import GradientBoostingClassifier
 from models.baseline import BaselineClassifier
 from models.collaborative_filtering import CollaborativeFilteringClassifier
 from models.neural_network import NeuralNetworkClassifier
+from models.xgboost_model import XGBoostClassifier
+from models.ensemble import EnsembleClassifier
 from typing import Protocol
 import pandas as pd
 import numpy as np
@@ -23,6 +25,7 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import label_binarize
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -158,7 +161,31 @@ def plot_roc_curves(classifiers: list, X_test: pd.DataFrame, y_test: pd.Series, 
     plt.legend(loc="lower right", fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
+    plt.savefig('figures/ROC_Curves.png', dpi=150)
+    print("Saved ROC curves to figures/ROC_Curves.png")
     plt.show()
+
+
+def plot_confusion_matrix(classifier, X_test: pd.DataFrame, y_test: pd.Series, class_labels: list, model_name: str):
+    y_pred = classifier.predict(X_test)
+    
+    cm = confusion_matrix(y_test, y_pred, labels=class_labels)
+    
+    cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm_norm, annot=True, fmt='.2%', cmap='Blues', 
+                xticklabels=class_labels, yticklabels=class_labels)
+    
+    plt.title(f'Confusion Matrix: {model_name}')
+    plt.ylabel('True Price Bin')
+    plt.xlabel('Predicted Price Bin')
+    plt.tight_layout()
+    
+    filename = f'figures/ConfusionMatrix_{model_name}.png'
+    plt.savefig(filename, dpi=150)
+    print(f"Saved confusion matrix to {filename}")
+    plt.close()
 
 
 def eval():
@@ -166,9 +193,11 @@ def eval():
         BaselineClassifier(),  
         LinearClassifier(),
         RandomForestClassifier(n_estimators=100, max_depth=20),
-        NeuralNetworkClassifier(hidden_layer_sizes=(100, 50), max_iter=50), 
-        CollaborativeFilteringClassifier(n_components=50, n_neighbors=20),  
-        GradientBoostingClassifier(n_estimators=20, max_depth=5, learning_rate=0.1, verbose=1),  
+        NeuralNetworkClassifier(hidden_layer_sizes=(200, 100), max_iter=300), 
+        CollaborativeFilteringClassifier(n_components=0.95, n_neighbors=50),  
+        #GradientBoostingClassifier(n_estimators=20, max_depth=5, learning_rate=0.1, verbose=1),
+        XGBoostClassifier(n_estimators=500, max_depth=8, learning_rate=0.05),
+        EnsembleClassifier(),
     ]
     
     # Load data
@@ -258,8 +287,11 @@ def eval():
     ))
     print()
     
-    # Plot ROC curves for models that support predict_proba
     plot_roc_curves(classifiers, X_test, y_test, train_labels)
+    
+    ensemble_classifier = next((c for c in classifiers if isinstance(c, EnsembleClassifier)), None)
+    if ensemble_classifier:
+        plot_confusion_matrix(ensemble_classifier, X_test, y_test, train_labels, "EnsembleClassifier")
 
 
 
